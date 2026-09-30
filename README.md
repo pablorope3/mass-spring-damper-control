@@ -3,7 +3,7 @@ Dynamic simulation and control of a mass-spring-damper system using Python and M
 ## Overview
 Estoy escribiendo algo 
 ## Objectives
-
+Otra prueba de escritura a ver que pasa ajaj
 ## Mathematical Model
 
 ## Simulation
