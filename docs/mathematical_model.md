@@ -2,7 +2,7 @@
 
 ## 1. System Description
 
-Te system consists of a mass connected to a spring and a damper. 
+The system consists of a mass connected to a spring and a damper.
 The mass is constrained to move along one dimension.
 
 The system has one degree of freedom, described by the displacement:
@@ -91,38 +91,30 @@ $$
 From the equation of motion:
 
 $$
-\ddot{x}
-=
-\frac{F(t)-c\dot{x}-kx}{m}
+\ddot{x} = \frac{F(t) - c\dot{x} - kx}{m}
 $$
 
 Therefore:
 
 $$
-\dot{x}_2 =
--\frac{k}{m}x_1
--\frac{c}{m}x_2
-+\frac{1}{m}F(t)
+\dot{x}_2 = -\frac{k}{m}x_1 - \frac{c}{m}x_2 + \frac{1}{m}F(t)
 $$
 
 The state-space representation can be written as:
 
 $$
-\dot{\mathbf{x}} = A\mathbf{x}+B\mathbf{u}
+\dot{\mathbf{x}} = A\mathbf{x} + B\mathbf{u}
 $$
 
-where:
+where $\mathbf{u} = F(t)$ is the input of the system, and:
 
 $$
-\mathbf{x}
-=
+\mathbf{x} =
 \begin{bmatrix}
 x \\
 \dot{x}
 \end{bmatrix}
 $$
-
-and:
 
 $$
 A =
@@ -155,11 +147,11 @@ The initial simulation will use the following parameters:
 The system will initially be displaced from its equilibrium position and released:
 
 $$
-x(0) = 1\ m
+x(0) = 1\ \text{m}
 $$
 
 $$
-\dot{x}(0) = 0\ m/s
+\dot{x}(0) = 0\ \text{m/s}
 $$
 
 No external force is applied during the initial free-response simulation:
@@ -179,23 +171,19 @@ $$
 For the selected parameters:
 
 $$
-\omega_n = \sqrt{10}
-\approx 3.16\ rad/s
+\omega_n = \sqrt{10} \approx 3.16\ \text{rad/s}
 $$
 
 The damping ratio is:
 
 $$
-\zeta =
-\frac{c}{2\sqrt{km}}
+\zeta = \frac{c}{2\sqrt{km}}
 $$
 
 Therefore:
 
 $$
-\zeta =
-\frac{1}{2\sqrt{10}}
-\approx 0.158
+\zeta = \frac{1}{2\sqrt{10}} \approx 0.158
 $$
 
 Since:
@@ -207,3 +195,30 @@ $$
 the system is underdamped.
 
 Therefore, the free response is expected to exhibit oscillations whose amplitude decreases over time.
+
+The damped natural frequency, which is the actual frequency of the oscillations, is:
+
+$$
+\omega_d = \omega_n\sqrt{1-\zeta^2} \approx 3.12\ \text{rad/s}
+$$
+
+## 8. Analytical Solution (Free Response)
+
+For an underdamped system with $F(t) = 0$, the solution is:
+
+$$
+x(t) = e^{-\zeta\omega_n t}
+\left[
+x(0)\cos(\omega_d t)
++
+\frac{\dot{x}(0) + \zeta\omega_n x(0)}{\omega_d}\sin(\omega_d t)
+\right]
+$$
+
+For the selected parameters and initial conditions:
+
+$$
+x(t) \approx e^{-0.5t}\left[\cos(3.12t) + 0.16\sin(3.12t)\right]
+$$
+
+This solution will be used to validate the numerical simulation.
