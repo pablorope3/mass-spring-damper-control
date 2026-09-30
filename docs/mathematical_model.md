@@ -2,7 +2,7 @@
 
 ## 1. System Description
 
-The system consists of a mass connected to a spring and a damper. 
+Te system consists of a mass connected to a spring and a damper. 
 The mass is constrained to move along one dimension.
 
 The system has one degree of freedom, described by the displacement:
