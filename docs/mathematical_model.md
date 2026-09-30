@@ -108,8 +108,7 @@ $$
 The state-space representation can be written as:
 
 $$
-\dot{\mathbf{x}} =
-A\mathbf{x}+B\mathbf{u}
+\dot{\mathbf{x}} = A\mathbf{x}+B\mathbf{u}
 $$
 
 where:
