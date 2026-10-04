@@ -13,7 +13,7 @@ This project models a one-degree-of-freedom mass-spring-damper system, simulates
 - [x] P controller
 - [x] PD controller
 - [x] PID controller
-- [ ] LQR controller
+- [x] LQR controller
 - [ ] MATLAB/Simulink implementation
 
 ## Objectives
@@ -22,6 +22,21 @@ This project models a one-degree-of-freedom mass-spring-damper system, simulates
 - Simulate the system numerically and validate the results against the analytical solution.
 - Design and compare P, PD, PID and LQR controllers.
 - Reproduce the simulations in MATLAB/Simulink and compare them with the Python results.
+
+## Project Structure
+
+```
+mass-spring-damper-control/
+├── docs/
+│   └── mathematical_model.md   # Model derivation
+├── src/
+│   ├── simulation.py           # Free response + analytical validation
+│   ├── control_pid.py          # P, PD and PID closed-loop simulation
+│   └── control_lqr.py          # LQR design and effect of the weight R
+├── results/                    # Generated plots
+├── requirements.txt
+└── README.md
+```
 
 ## Mathematical Model
 
@@ -68,7 +83,8 @@ python src/simulation.py
 All controllers are tested on the same plant with a unit step reference $r = 1$ m, starting from rest. The position error is $e = r - x$ and the controller output $u$ is the force applied to the mass.
 
 ```bash
-python src/control_pid.py
+python src/control_pid.py   # P, PD and PID
+python src/control_lqr.py   # LQR
 ```
 
 ### P Controller
@@ -120,14 +136,31 @@ The integral action drives the steady-state error to zero.
 Optimal state feedback that minimizes the cost function
 
 $$
-J = \int_0^\infty \left( \mathbf{x}^T Q \mathbf{x} + u^T R u \right) dt,
-\qquad
-u = -K\mathbf{x}
+J = \int_0^\infty \left( \mathbf{x}^T Q \mathbf{x} + u^T R u \right) dt
 $$
 
-where $K$ is obtained by solving the algebraic Riccati equation.
+The gain is $K = R^{-1}B^TP$, where $P$ solves the algebraic Riccati equation. Since the LQR is a regulator (it drives the state to zero), a feedforward term is added to track a reference:
 
-*Status: planned.*
+$$
+u = -K\mathbf{x} + N r,
+\qquad
+N = k + K_1
+$$
+
+$N$ compensates the spring force at the final position, giving zero steady-state error. This relies on an exact model: if the real $k$ differs from the modeled one, an error remains (the PID does not have this problem thanks to its integral action).
+
+Weights used: $Q = \mathrm{diag}(100,\ 1)$ (penalty on position and velocity) and $R = 1$, giving $K = [4.14,\ 2.21]$. The closed-loop poles move from $-0.5 \pm 3.12j$ to $-1.60 \pm 3.40j$.
+
+**Effect of the weight $R$**
+
+| $R$ | $K_1$ | $K_2$ | Overshoot | Settling time (2 %) | Max. force |
+|---:|---:|---:|---:|---:|---:|
+| 0.01 | 90.50 | 15.79 | 0.8 % | 0.41 s | 100.5 N |
+| 0.1 | 23.17 | 6.57 | 6.5 % | 1.05 s | 33.2 N |
+| 1 | 4.14 | 2.21 | 22.7 % | 2.24 s | 14.1 N |
+| 10 | 0.49 | 0.44 | 48.8 % | 5.23 s | 10.5 N |
+
+A small $R$ makes the response fast and well damped but demands a large force; a large $R$ saves control effort at the cost of a slower, more oscillatory response.
 
 ## Results
 
@@ -145,9 +178,14 @@ where $K$ is obtained by solving the algebraic Riccati equation.
 
 - **P:** fast but poorly damped, and with a permanent error.
 - **PD:** the derivative action removes the oscillations, but the error remains.
-- **PID:** the only one that reaches the reference exactly, at the cost of some overshoot.
+- **PID:** reaches the reference exactly thanks to the integral action, at the cost of some overshoot.
+- **LQR:** reaches the reference with the right feedforward term, and lets you choose the speed/effort trade-off through $Q$ and $R$.
 
-LQR comparison: *coming soon.*
+**LQR**
+
+![LQR step response for different values of R](results/lqr_response.png)
+
+The LQR reaches the reference with zero steady-state error and a tunable trade-off between speed and control effort (see the table in the [LQR section](#lqr-controller)). A direct comparison of P, PD, PID and LQR in a single plot is planned.
 
 ## MATLAB/Simulink
 
@@ -184,6 +222,7 @@ Run the simulations:
 ```bash
 python src/simulation.py      # free response
 python src/control_pid.py     # P, PD and PID controllers
+python src/control_lqr.py     # LQR controller
 ```
 
 The plots are saved in the `results/` folder.
