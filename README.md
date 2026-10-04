@@ -4,14 +4,15 @@ Dynamic simulation and control of a mass-spring-damper system using Python and M
 
 ## Overview
 
-This project models a one-degree-of-freedom mass-spring-damper system, simulates its dynamic response, and (in progress) designs and compares different feedback controllers.
+This project models a one-degree-of-freedom mass-spring-damper system, simulates its dynamic response, and designs and compares different feedback controllers.
 
 **Project status**
 
 - [x] Mathematical model
 - [x] Free-response simulation in Python (validated against the analytical solution)
-- [ ] P controller
-- [ ] PD controller
+- [x] P controller
+- [x] PD controller
+- [x] PID controller
 - [ ] LQR controller
 - [ ] MATLAB/Simulink implementation
 
@@ -19,8 +20,22 @@ This project models a one-degree-of-freedom mass-spring-damper system, simulates
 
 - Derive the equation of motion and its state-space representation.
 - Simulate the system numerically and validate the results against the analytical solution.
-- Design and compare P, PD and LQR controllers.
+- Design and compare P, PD, PID and LQR controllers.
 - Reproduce the simulations in MATLAB/Simulink and compare them with the Python results.
+
+## Project Structure
+
+```
+mass-spring-damper-control/
+├── docs/
+│   └── mathematical_model.md   # Model derivation
+├── src/
+│   ├── simulation.py           # Free response + analytical validation
+│   └── control_pid.py          # P, PD and PID closed-loop simulation
+├── results/                    # Generated plots
+├── requirements.txt
+└── README.md
+```
 
 ## Mathematical Model
 
@@ -48,7 +63,7 @@ Parameters used in the simulations:
 | Spring stiffness | $k$ | 10 | N/m |
 | Damping coefficient | $c$ | 1 | Ns/m |
 
-With these values, $\omega_n \approx 3.16$ rad/s and $\zeta \approx 0.158$, so the system is underdamped.
+With these values, $\omega_n \approx 3.16$ rad/s and $\zeta \approx 0.158$, so the open-loop system is underdamped.
 
 The full derivation is available in [`docs/mathematical_model.md`](docs/mathematical_model.md).
 
@@ -64,27 +79,55 @@ python src/simulation.py
 
 ## Control
 
-The controllers below are planned and will be added step by step. All of them will be tested on the same system and with the same reference.
+All controllers are tested on the same plant with a unit step reference $r = 1$ m, starting from rest. The position error is $e = r - x$ and the controller output $u$ is the force applied to the mass.
+
+```bash
+python src/control_pid.py
+```
 
 ### P Controller
 
 Proportional feedback on the position error:
 
 $$
-u = K_p\,(r - x)
+u = K_p\,e
 $$
 
-*Status: planned.*
+The proportional action alone does not add damping, so the response is very oscillatory. It also leaves a steady-state error:
+
+$$
+e_{ss} = \frac{r\,k}{k + K_p}
+$$
+
+With $K_p = 20$ N/m, $e_{ss} = 0.333$ m, which matches the simulation.
 
 ### PD Controller
 
-Proportional feedback on the error plus derivative action (added damping):
+Proportional feedback plus derivative action on the measured velocity:
 
 $$
-u = K_p\,(r - x) - K_d\,\dot{x}
+u = K_p\,e - K_d\,\dot{x}
 $$
 
-*Status: planned.*
+The derivative term adds damping ($c + K_d$ in the closed loop), which removes the oscillations. It does not remove the steady-state error.
+
+### PID Controller
+
+Adds an integral term that accumulates the error:
+
+$$
+u = K_p\,e + K_i \int_0^t e\,d\tau - K_d\,\dot{x}
+$$
+
+The integral action drives the steady-state error to zero.
+
+**Gains used**
+
+| Controller | $K_p$ [N/m] | $K_i$ [N/(m·s)] | $K_d$ [Ns/m] |
+|---|---:|---:|---:|
+| P | 20 | 0 | 0 |
+| PD | 20 | 0 | 8 |
+| PID | 20 | 40 | 8 |
 
 ### LQR Controller
 
@@ -102,9 +145,23 @@ where $K$ is obtained by solving the algebraic Riccati equation.
 
 ## Results
 
-Free response: see the plot in the [Simulation](#simulation) section.
+![Step response: P vs PD vs PID](results/controllers_comparison.png)
 
-Controller comparison (overshoot, settling time, steady-state error and control effort): *coming soon.*
+| Controller | Overshoot | Settling time (2 %) | Steady-state error |
+|---|---:|---:|---:|
+| P | 16.7 % | never | 0.33 m |
+| PD | 0 % | never | 0.33 m |
+| PID | 11.1 % | 1.91 s | 0 m |
+
+"Never" means the response does not enter the 2 % band around the reference, because it settles at a different value.
+
+**Conclusions**
+
+- **P:** fast but poorly damped, and with a permanent error.
+- **PD:** the derivative action removes the oscillations, but the error remains.
+- **PID:** the only one that reaches the reference exactly, at the cost of some overshoot.
+
+LQR comparison: *coming soon.*
 
 ## MATLAB/Simulink
 
@@ -136,10 +193,11 @@ source .venv/bin/activate      # Mac/Linux
 pip install -r requirements.txt
 ```
 
-Run the simulation:
+Run the simulations:
 
 ```bash
-python src/simulation.py
+python src/simulation.py      # free response
+python src/control_pid.py     # P, PD and PID controllers
 ```
 
-The plot is saved in `results/free_response.png`.
+The plots are saved in the `results/` folder.
