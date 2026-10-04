@@ -23,20 +23,6 @@ This project models a one-degree-of-freedom mass-spring-damper system, simulates
 - Design and compare P, PD, PID and LQR controllers.
 - Reproduce the simulations in MATLAB/Simulink and compare them with the Python results.
 
-## Project Structure
-
-```
-mass-spring-damper-control/
-├── docs/
-│   └── mathematical_model.md   # Model derivation
-├── src/
-│   ├── simulation.py           # Free response + analytical validation
-│   └── control_pid.py          # P, PD and PID closed-loop simulation
-├── results/                    # Generated plots
-├── requirements.txt
-└── README.md
-```
-
 ## Mathematical Model
 
 The system is described by:
